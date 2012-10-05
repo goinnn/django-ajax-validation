@@ -111,6 +111,7 @@
 
         return this.each(function() {
             var form = $(this);
+            var current = null;
             settings.dom.bind(settings.event, function(ev)  {
                 var status = false;
                 var responseData = {};
@@ -119,7 +120,7 @@
                 if (settings.fields) {
                     data += '&' + $.param({fields: settings.fields});
                 } else if (settings.untilCurrent) {
-                    var current = settings.getUntilCurrent(ev, nodeNames);
+                    current = settings.getUntilCurrent(ev, nodeNames);
                     if (!current) {
                         return current;
                     }
@@ -149,7 +150,24 @@
                     success: function(data, textStatus) {
                         responseData = data;
                         status = data.valid;
-                        settings.removeErrors(form, settings.type, settings.fields);
+                        var fields = settings.fields;
+                        var fieldsTags = $(that).find(nodeNames);
+                        var fieldsToRemove = [];
+                        if (current !== null) {
+                            for (var i=0; i<fieldsTags.length; i++) {
+                                var field = fieldsTags[i];
+                                if (fields !== null || fields.indexOf(f) != -1) {
+                                    fieldsToRemove[fieldsToRemove.length] = field.name;
+                                }
+                                if (field == current) {
+                                    break;
+                                }
+                            }
+                        } else {
+                            fieldsToRemove = fields;
+                        }
+                        console.log(fieldsToRemove);
+                        settings.removeErrors(form, settings.type, fieldsToRemove);
                         if (!status)    {
                             if (settings.callback)  {
                                 settings.callback(data, form);
