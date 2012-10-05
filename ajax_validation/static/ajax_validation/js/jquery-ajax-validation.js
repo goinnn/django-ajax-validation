@@ -166,7 +166,6 @@
                         } else {
                             fieldsToRemove = fields;
                         }
-                        console.log(fieldsToRemove);
                         settings.removeErrors(form, settings.type, fieldsToRemove);
                         if (!status)    {
                             if (settings.callback)  {
