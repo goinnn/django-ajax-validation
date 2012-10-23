@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='django-ajax-validation',
-    version='0.1.8',
+    version='0.1.9',
     description='This is fork of original Alex Gaynor\'s django-ajax-validation.',
     author='Kuba Janoszek',
     author_email='kuba.janoszek@gmail.com',

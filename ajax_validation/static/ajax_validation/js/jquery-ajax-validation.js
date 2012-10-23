@@ -84,9 +84,9 @@
     errorInjector[type](form, data);
     }
 
-    function getUntilCurrent(ev, nodeNames) {
-        var current = ev.originalEvent.explicitOriginalTarget;
-        if (current.nodeName.toLowerCase() === "option") {
+    function getUntilCurrent(ev, nodeNames, form) {
+        var current = ev.originalEvent.explicitOriginalTarget || ev.originalEvent.target || form.find("input, select, textarea").last()[0];
+        if (current.tagName.toLowerCase() === "option") {
             current = $(current).parents("select")[0];
         }
          if (nodeNames.split(", ").indexOf(current.nodeName.toLowerCase()) === -1) {
@@ -102,7 +102,6 @@
             fields: false,
             dom: this,
             event: 'submit',
-            submitHandler: null,
             untilCurrent: false,
             removeErrors: removeErrors,
             injectErrors: injectErrors,
@@ -112,15 +111,14 @@
         return this.each(function() {
             var form = $(this);
             var current = null;
-            settings.dom.bind(settings.event, function(ev)  {
-                var status = false;
+            var validation = function(ev, is_submitting)  {
                 var responseData = {};
                 var data = form.serialize();
                 var nodeNames = "input, select, textarea";
                 if (settings.fields) {
                     data += '&' + $.param({fields: settings.fields});
                 } else if (settings.untilCurrent) {
-                    current = settings.getUntilCurrent(ev, nodeNames);
+                    current = settings.getUntilCurrent(ev, nodeNames, form);
                     if (!current) {
                         return current;
                     }
@@ -138,20 +136,18 @@
                     });
                     data += '&' + $.param({fields: fieldsName});
                 }
-                var that = this;
                 $.ajax({
-                    async: false,
+                    async: true,
                     data: data,
                     dataType: 'json',
                     traditional: true,
                     error: function(XHR, textStatus, errorThrown)   {
-                        status = true;
                     },
                     success: function(data, textStatus) {
                         responseData = data;
-                        status = data.valid;
+                        var is_valid = data.valid;
                         var fields = settings.fields;
-                        var fieldsTags = $(that).find(nodeNames);
+                        var fieldsTags = form.find(nodeNames);
                         var fieldsToRemove = [];
                         if (current !== null) {
                             for (var i=0; i<fieldsTags.length; i++) {
@@ -167,23 +163,30 @@
                             fieldsToRemove = fields;
                         }
                         settings.removeErrors(form, settings.type, fieldsToRemove);
-                        if (!status)    {
-                            if (settings.callback)  {
+                        if (!is_valid) {
+                            if (settings.callback) {
                                 settings.callback(data, form);
                             } else {
                                 settings.injectErrors(settings.type, form, data);
                             }
                         }
+                        if (is_submitting && is_valid) {
+                            form.submit();
+                        } else {
+                            is_submitting = false;
+                        }
                     },
                     type: 'POST',
                     url: url
                 });
-                if (status && settings.submitHandler) {
-                    return settings.submitHandler(form, responseData);
-                }
-                return status;
-            });
+            }
+            settings.dom.bind(settings.event, validation);
+            if (settings.event != "submit") {
+                settings.dom.find("input[type=submit]").click(function (ev) {
+                    ev.preventDefault();
+                    validation(ev, true);
+                });
+            }
         });
     };
 })(jQuery);
-
