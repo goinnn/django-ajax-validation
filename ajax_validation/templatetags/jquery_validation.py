@@ -8,6 +8,7 @@ register = template.Library()
 
 VALIDATION_SCRIPT = None
 
+
 def include_validation():
     global VALIDATION_SCRIPT
     if VALIDATION_SCRIPT is None:

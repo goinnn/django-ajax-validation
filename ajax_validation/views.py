@@ -10,7 +10,6 @@ from django.shortcuts import get_object_or_404
 from ajax_validation.utils import LazyEncoder
 
 
-
 class ModelValidationView(object):
     model = None
     form_class = None
@@ -25,19 +24,16 @@ class ModelValidationView(object):
         self.url_pattern = url_pattern or self.__class__.url_pattern
         self.url_name = url_name or self.__class__.url_name
 
-
     def get_model(self):
         if not self.model:
             raise ImproperlyConfigured('`model` have to be setup on ModelValidationView instance')
         return self.model
-
 
     def get_form_class(self):
         if not self.form_class:
             model = self.get_model()
             self.form_class = modelform_factory(model)
         return self.form_class
-
 
     def _get_app_and_model_names(self):
         model = self.get_model()
@@ -46,7 +42,6 @@ class ModelValidationView(object):
             'model_name': model._meta.object_name.lower(),
             }
 
-
     def get_url_pattern(self, url_prefix=''):
         if self.url_pattern:
             return self.url_pattern
@@ -54,13 +49,11 @@ class ModelValidationView(object):
         ctx.update(url_prefix=url_prefix)
         return r'^%(url_prefix)s%(app_name)s/%(model_name)s/(?P<object_pk>\d+)?$' % ctx
 
-
     def get_url_name(self):
         if self.url_name:
             return self.url_name
         ctx = self._get_app_and_model_names()
         return 'validate-%(app_name)s-%(model_name)s' % ctx
-
 
     def get_url(self, url_prefix=''):
         return django_url(
@@ -69,24 +62,20 @@ class ModelValidationView(object):
             name=self.get_url_name())
     url = property(lambda s: s.get_url())
 
-
     def get_instance(self, request, *args, **kwargs):
         object_pk = kwargs.get('object_pk', None)
         model = self.get_model()
         if object_pk:
-            instance = get_object_or_404(model, pk=object_pk)
+            return get_object_or_404(model, pk=object_pk)
         return model()
-
 
     def get_form_kwargs(self, request, *args, **kwargs):
         instance = self.get_instance(request, *args, **kwargs)
         return dict(data=request.POST, instance=instance)
 
-
     def save(self, request, form):
         form.save()
         return {}
-
 
     def get_form_error_and_formfields(self, form):
         """
@@ -111,7 +100,6 @@ class ModelValidationView(object):
 
         return errors, formfields
 
-
     def get_formfield_id(self, key, formfields):
         if '__all__' == key:
             return key
@@ -121,7 +109,6 @@ class ModelValidationView(object):
             html_id = formfield.field.widget.id_for_label(html_id)
             return html_id
         return None
-
 
     def validate(self, request, *args, **kwargs):
         if request.method != 'POST':
